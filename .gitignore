@@ -1,0 +1,5 @@
+swe
+*.o
+*.pgm
+*.gif
+__pycache__/

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>miniSWE — 2D shallow-water solver</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 16px/1.55 system-ui, sans-serif; max-width: 760px;
+         margin: 2.5rem auto; padding: 0 1rem; }
+  h1, h2 { line-height: 1.2; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  pre { background: rgba(127,127,127,.12); padding: .8rem 1rem;
+        border-radius: 6px; overflow-x: auto; }
+  table { border-collapse: collapse; margin: 1rem 0; }
+  th, td { padding: .35rem .8rem; border-bottom: 1px solid rgba(127,127,127,.3);
+           text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  img { max-width: 100%; border-radius: 6px; }
+  .muted { opacity: .7; font-size: .9em; }
+</style>
+</head>
+<body>
+
+<h1>miniSWE</h1>
+<p>2D shallow-water solver. Lax-Friedrichs finite differences on a periodic
+grid, OpenMP threaded. Single C++ file, ~150 lines.</p>
+
+<h2>Animation</h2>
+<p>Gaussian bump at <code>t=0</code> spreads as gravity waves on a 1024×1024 grid.</p>
+<img src="wave.gif" alt="shallow-water height field animation">
+
+<h2>Equations</h2>
+<p>State <code>U = [h, hu, hv]</code>, gravity <code>g = 9.81</code>.</p>
+<pre>∂h /∂t + ∂(hu)/∂x         + ∂(hv)/∂y         = 0
+∂hu/∂t + ∂(hu² + ½gh²)/∂x + ∂(huv)/∂y        = 0
+∂hv/∂t + ∂(huv)/∂x        + ∂(hv² + ½gh²)/∂y = 0</pre>
+<p>Lax-Friedrichs update with CFL-adaptive timestep
+<code>Δt = 0.4 · min(Δx,Δy) / max(|u|+c, |v|+c)</code>, <code>c=√(gh)</code>.</p>
+
+<h2>Strong scaling</h2>
+<p>1024² grid, <code>t_final = 1.5</code>, WSL2 Ubuntu on a 4-core + HT laptop.</p>
+<table>
+<thead><tr><th>Threads</th><th>Wall (s)</th><th>Mcell-updates/s</th><th>Speedup</th></tr></thead>
+<tbody>
+  <tr><td>1</td><td>40.15</td><td>35.94</td><td>1.00×</td></tr>
+  <tr><td>2</td><td>28.60</td><td>50.44</td><td>1.40×</td></tr>
+  <tr><td>4</td><td>15.96</td><td>90.39</td><td>2.52×</td></tr>
+  <tr><td>8</td><td>13.35</td><td>108.04</td><td>3.01×</td></tr>
+</tbody>
+</table>
+<p class="muted">Memory-bandwidth bound, as expected for a stencil code. Speedup
+plateaus at physical-core count; HT threads share cache and bus so the 4→8 gain
+is small.</p>
+
+<h2>Build &amp; run</h2>
+<pre>make
+OMP_NUM_THREADS=8 ./swe 1024 1024 2.0 8   # nx ny t_final n_frames
+./scale.sh                                # strong-scaling sweep
+python3 make_gif.py                       # stitch frames into wave.gif</pre>
+
+<p class="muted">Source: <a href="https://github.com/">repository</a> · MIT-style, do whatever.</p>
+
+</body>
+</html>
