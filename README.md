@@ -155,6 +155,9 @@ Typical performance:
 - **8-core**: 1400-2000 Mcells/s
 - **16-core**: 2500-3500 Mcells/s
 
+
+*These figures illustrate the expected output format and the shape of strong scaling; they are not measured results from a benchmarked run on a specific machine.*
+
 ### Scaling Analysis
 
 Run strong-scaling benchmark:
